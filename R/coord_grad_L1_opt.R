@@ -72,7 +72,9 @@ coord_grad_L1_opt <- function(likfun, start_parms, lambda, pen_idx, epsl,
         {
             cat("Gradient descent is used\n")
         }
-        parms <- parms - grad * epsl
+        gradCp <- - grad
+        gradCp[pen_idx] <- gradCp[pen_idx] + lambda
+        parms <- parms - gradCp * epsl
         parms[parms < 0] <- 0
         compute_likobj <- T
     }else
@@ -197,7 +199,7 @@ test_coord_grad_L1_opt <- function()
                       epsl, silent, convtol, convtol2, max_iter, max_iter2)
     
     optim_obj <- optim(parms_init, func, dfunc, lambda = lambda, method = "L-BFGS-B",
-                       lower = rep(0, n))
+                       lower = rep(0, 3))
 }
 
 # -(x^2 + y^2 + z^2 - x*y - 0.3*y*z - 0.5*z*x - 3*x - 4*y - 5*z)
@@ -241,9 +243,97 @@ test_coord_grad_L1_opt_2nd <- function()
                                    epsl, silent, convtol, convtol2, max_iter, max_iter2)
     
     optim_obj <- optim(parms_init, func, dfunc, lambda = lambda, method = "L-BFGS-B",
-                       lower = rep(0, n))
+                       lower = rep(0, 3))
 }
 
+# -(x^2 + y^2 + z^2 + x*y*z - x*y - y*z - x*z - 3*x - 4*y - 5*z)
+# -(2*x + y*z - y - z - 3, 2*y + x*z - x - z - 4, 2*z + x*y - y - x - 5)
+# -(2, z - 1, y - 1)
+# -(z - 1, 2, x - 1)
+# -(y - 1, x - 1, 2)
+test_coord_grad_L1_opt_3rd <- function()
+{
+    likfun <- function(x)
+    {
+        loglik <- -(x[1]^2 + x[2]^2 + x[3]^2 + x[1]*x[2]*x[3] - x[1]*x[2] - 
+                        x[2]*x[3] - x[1]*x[3] - 3*x[1] - 4*x[2] - 5*x[3])
+        grad <- -c(2*x[1] + x[2]*x[3] - x[2] - x[3] - 3, 2*x[2] + x[1]*x[3] - 
+                       x[1] - x[3] - 4, 2*x[3] + x[1]*x[2] - x[2] - x[1] - 5)
+        info <- matrix(c(2, x[3] - 1, x[2] - 1, 
+                         x[3] - 1, 2, x[1] - 1, 
+                         x[2] - 1, x[1] - 1, 2), 
+                       3, 3, byrow = T)
+        return(list(loglik = loglik, grad = grad, info = info))
+    }
+    
+    func <- function(x, lambda)
+    {
+        x[1]^2 + x[2]^2 + x[3]^2 + x[1]*x[2]*x[3] - x[1]*x[2] - 
+            x[2]*x[3] - x[1]*x[3] - 3*x[1] - 4*x[2] - 5*x[3] + 
+            lambda * sum(x)
+    }
+    dfunc <- function(x, lambda)
+    {
+        c(2*x[1] + x[2]*x[3] - x[2] - x[3] - 3, 2*x[2] + x[1]*x[3] - 
+              x[1] - x[3] - 4, 2*x[3] + x[1]*x[2] - x[2] - x[1] - 5) + lambda
+    }
+    
+    parms_init <- runif(3)
+    lambda <- 1
+    pen_idx <- c(1 : 3)
+    epsl <- 1e-2
+    silent <- F
+    convtol <- 1e-4
+    convtol2 <- 1e-4
+    max_iter <- 40
+    max_iter2 <- 40
+    coord_obj <- coord_grad_L1_opt(likfun, parms_init, lambda, pen_idx, 
+                                   epsl, silent, convtol, convtol2, max_iter, max_iter2)
+    
+    optim_obj <- optim(parms_init, func, dfunc, lambda = lambda, method = "L-BFGS-B",
+                       lower = rep(0, 3))
+}
+
+# -(sin(x*y))
+# -(cos(x*y) * y, cos(x*y) * x)
+# -(-sin(x*y) * y^2, -sin(x*y) * x*y + cos(x*y))
+# -(-sin(x*y) * x*y + cos(x*y), -sin(x*y) * x^2)
+test_coord_grad_L1_opt_4th <- function()
+{
+    likfun <- function(x)
+    {
+        loglik <- -(sin(x[1]*x[2]))
+        grad <- -c(cos(x[1]*x[2]) * x[2], cos(x[1]*x[2]) * x[1])
+        info <- matrix(c(-sin(x[1]*x[2]) * x[2]^2, -sin(x[1]*x[2]) * x[1]*x[2] + cos(x[1]*x[2]), 
+                         -sin(x[1]*x[2]) * x[1]*x[2] + cos(x[1]*x[2]), -sin(x[1]*x[2]) * x[1]^2), 
+                       2, 2, byrow = T)
+        return(list(loglik = loglik, grad = grad, info = info))
+    }
+    
+    func <- function(x, lambda)
+    {
+        sin(x[1]*x[2]) + lambda * sum(x)
+    }
+    dfunc <- function(x, lambda)
+    {
+        c(cos(x[1]*x[2]) * x[2], cos(x[1]*x[2]) * x[1]) + lambda
+    }
+    
+    parms_init <- runif(2)
+    lambda <- 0.1
+    pen_idx <- c(1 : 2)
+    epsl <- 1e-3
+    silent <- F
+    convtol <- 1e-4
+    convtol2 <- 1e-4
+    max_iter <- 40
+    max_iter2 <- 40
+    coord_obj <- coord_grad_L1_opt(likfun, parms_init, lambda, pen_idx, 
+                                   epsl, silent, convtol, convtol2, max_iter, max_iter2)
+    
+    optim_obj <- optim(parms_init, func, dfunc, lambda = lambda, method = "L-BFGS-B",
+                       lower = rep(0, 2))
+}
 
 
 

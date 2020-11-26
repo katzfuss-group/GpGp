@@ -38,7 +38,7 @@ coord_grad_L1_opt <- function(likfun, start_parms, lambda, pen_idx, epsl,
         cat("pars = ",  paste0(round(parms, 4)), "  \n" )
         cat(paste0("obj = ", round(obj, 6), "  \n"))
         cat("grad = ")
-        cat(as.character(round(grad, 3)))
+        cat(as.character(round(-grad + lambda, 3)))
         cat("\n")
     }
     
@@ -59,7 +59,11 @@ coord_grad_L1_opt <- function(likfun, start_parms, lambda, pen_idx, epsl,
         likobj_new <- likfun(coord_des_obj$parms)
         obj_new <- -likobj_new$loglik + lambda * sum(abs(coord_des_obj$parms[pen_idx]))
         if(obj_new < obj)
+        {
+            if(sqrt(sum((coord_des_obj$parms - parms)^2)) < epsl * convtol)
+                break
             grad_des <- F
+        }
         else
             grad_des <- T
     }
@@ -68,15 +72,18 @@ coord_grad_L1_opt <- function(likfun, start_parms, lambda, pen_idx, epsl,
     
     if(grad_des)
     {
+        gradCp <- - grad
+        gradCp[pen_idx] <- gradCp[pen_idx] + lambda
+        parms_old <- parms
+        parms <- parms - gradCp * epsl
+        parms[parms < 0] <- 0
+        if(sqrt(sum((parms_old - parms)^2)) < epsl * convtol)
+            break
+        compute_likobj <- T
         if(!silent)
         {
             cat("Gradient descent is used\n")
         }
-        gradCp <- - grad
-        gradCp[pen_idx] <- gradCp[pen_idx] + lambda
-        parms <- parms - gradCp * epsl
-        parms[parms < 0] <- 0
-        compute_likobj <- T
     }else
     {
         parms <- coord_des_obj$parms
@@ -159,6 +166,8 @@ test_coord_quad_posi_domain <- function()
 # -(-8*y - 5, -8*x - 4, 12*z^2 - 18*z)
 test_coord_grad_L1_opt <- function()
 {
+    lambda <- 1
+    pen_idx <- c(1 : 3)
     likfun <- function(x)
     {
         loglik <- -(x[1]^4 + x[2]^4 + x[3]^4 - 8*x[1]*x[2]*x[3] - 3*x[1]*x[2] - 
@@ -186,10 +195,22 @@ test_coord_grad_L1_opt <- function()
            4*x[3]^3 - 8*x[1]*x[2] - 4*x[2] - 5*x[1] - 9*x[3]^2) + lambda
     }
     
+    link <- function(x) {exp(x)}
+    invlink <- function(x) {log(x)}
+    dlink <- function(x) {exp(x)}
+    pen <- function(x) {lambda * sum(x)}
+    dpen <- function(x) {rep(lambda, 3)}
+    likfun_lp <- function(lp)
+    {
+        lkobj <- likfun(link(lp))
+        loglik <- lkobj$loglik - pen(link(lp))
+        grad <- lkobj$grad * dlink(lp) - dpen(link(lp)) * dlink(lp)
+        info <- - lkobj$info * outer(dlink(lp), dlink(lp))
+        return(list(loglik = loglik, grad = grad, info = info))
+    }
+    
     parms_init <- runif(3)
-    lambda <- 1
-    pen_idx <- c(1 : 3)
-    epsl <- 1e-3
+    epsl <- 1e-2
     silent <- F
     convtol <- 1e-4
     convtol2 <- 1e-4
@@ -197,6 +218,9 @@ test_coord_grad_L1_opt <- function()
     max_iter2 <- 40
     coord_obj <- coord_grad_L1_opt(likfun, parms_init, lambda, pen_idx, 
                       epsl, silent, convtol, convtol2, max_iter, max_iter2)
+    
+    parms_init_log <- invlink(parms_init)
+    Fisher_score_obj <- fisher_scoring_modify(likfun_lp, parms_init_log, link, FALSE)
     
     optim_obj <- optim(parms_init, func, dfunc, lambda = lambda, method = "L-BFGS-B",
                        lower = rep(0, 3))
@@ -209,6 +233,8 @@ test_coord_grad_L1_opt <- function()
 # -(-0.5, -0.3, 2)
 test_coord_grad_L1_opt_2nd <- function()
 {
+    lambda <- 1
+    pen_idx <- c(1 : 3)
     likfun <- function(x)
     {
         loglik <- -(x[1]^2 + x[2]^2 + x[3]^2 - x[1]*x[2] - 0.3*x[2]*x[3] - 0.5*x[3]*x[1] - 3*x[1] - 4*x[2] - 5*x[3])
@@ -217,6 +243,19 @@ test_coord_grad_L1_opt_2nd <- function()
                          -1, 2, -0.3, 
                          -0.5, -0.3, 2), 
                        3, 3, byrow = T)
+        return(list(loglik = loglik, grad = grad, info = info))
+    }
+    link <- function(x) {exp(x)}
+    invlink <- function(x) {log(x)}
+    dlink <- function(x) {exp(x)}
+    pen <- function(x) {lambda * sum(x)}
+    dpen <- function(x) {rep(lambda, 3)}
+    likfun_lp <- function(lp)
+    {
+        lkobj <- likfun(link(lp))
+        loglik <- lkobj$loglik - pen(link(lp))
+        grad <- lkobj$grad * dlink(lp) - dpen(link(lp)) * dlink(lp)
+        info <- - lkobj$info * outer(dlink(lp), dlink(lp))
         return(list(loglik = loglik, grad = grad, info = info))
     }
     
@@ -231,8 +270,6 @@ test_coord_grad_L1_opt_2nd <- function()
     }
     
     parms_init <- runif(3)
-    lambda <- 1
-    pen_idx <- c(1 : 3)
     epsl <- 1e-3
     silent <- F
     convtol <- 1e-4
@@ -241,6 +278,9 @@ test_coord_grad_L1_opt_2nd <- function()
     max_iter2 <- 40
     coord_obj <- coord_grad_L1_opt(likfun, parms_init, lambda, pen_idx, 
                                    epsl, silent, convtol, convtol2, max_iter, max_iter2)
+    
+    parms_init_log <- invlink(parms_init)
+    Fisher_score_obj <- fisher_scoring_modify(likfun_lp, parms_init_log, link, FALSE)
     
     optim_obj <- optim(parms_init, func, dfunc, lambda = lambda, method = "L-BFGS-B",
                        lower = rep(0, 3))

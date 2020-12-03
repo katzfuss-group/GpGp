@@ -6,7 +6,7 @@
 #' @param pen_idx the indices of parameters that will be penalized by the L1
 #' @param epsl step size when coordinate descent does not reduce the obj func
 #' @param silent TRUE/FALSE for suppressing output
-#' @param convtol convergence tolerance on the norm of grad
+#' @param convtol convergence tolerance on the objective function
 #' @param convtol2 convergence tolerance on the step of one coordinate descent epoch
 #' @param max_iter maximum number of 2nd order approximations
 #' @param max_iter2 maximum number of epochs in coordinate descent
@@ -14,86 +14,71 @@ coord_grad_L1_opt <- function(likfun, start_parms, lambda, pen_idx, epsl,
                               silent = FALSE, convtol = 1e-4, convtol2 = 1e-4, 
                               max_iter = 40, max_iter2 = 40)
 {
-  parms <- start_parms
+  
   if(lambda < 0 || epsl < 0)
     stop("lambda and epsl should both be greater than zero\n")
-  compute_likobj = T
+  parms <- start_parms
+  likobj <- likfun(parms)
   for(i in 1 : max_iter)
   {
-    if(compute_likobj)
-      likobj <- likfun(parms)
-    
     # check for Inf, NA, or NaN
     if( !test_likelihood_object(likobj) ){
       stop("inf or na or nan in likobj\n")
     }
-    
     obj <- -likobj$loglik + lambda * sum(abs(parms[pen_idx]))
-    grad <- likobj$grad
-    info <- likobj$info
-    
+    grad <- -likobj$grad 
+    grad[pen_idx] <- grad[pen_idx] + lambda
+    H <- likobj$info
     if(!silent)
     {
         cat(paste0("Iter ", i, ": \n"))
         cat("pars = ",  paste0(round(parms, 4)), "  \n" )
         cat(paste0("obj = ", round(obj, 6), "  \n"))
         cat("grad = ")
-        cat(as.character(round(-grad + lambda, 3)))
+        cat(as.character(round(grad, 3)))
         cat("\n")
     }
     
-    gradCp <- grad
-    gradCp[pen_idx] <- gradCp[pen_idx] - lambda
-    if(sqrt(sum(gradCp^2)) < convtol)
-      break
-    
     # coordinate descent
-    b <- - grad
-    b[pen_idx] <- b[pen_idx] + lambda
-    b <- b - as.vector(info %*% parms)
-    coord_des_obj <- coord_quad_posi_domain(info, b, parms, silent, 
+    b <- grad - as.vector(H %*% parms)
+    coord_des_obj <- coord_quad_posi_domain(H, b, parms, silent, 
                                             convtol2, max_iter2, 1e6)
     # check if obj func decreases
     if(coord_des_obj$code < 2) # parms_new is valid
     {
-        likobj_new <- likfun(coord_des_obj$parms)
-        obj_new <- -likobj_new$loglik + lambda * sum(abs(coord_des_obj$parms[pen_idx]))
-        if(obj_new < obj)
+        stepSz <- step_size_Armijo(parms, obj, grad, coord_des_obj$parms - parms, 1e-4, 
+                                   function(x){- likfun(x)$loglik + lambda * sum(x)})
+        if(stepSz < 0)
+            grad_des <- T
+        else
         {
-            if(sqrt(sum((coord_des_obj$parms - parms)^2)) < epsl * convtol)
-                break
+            parmsNew <- parms + stepSz * (coord_des_obj$parms - parms)
             grad_des <- F
         }
-        else
-            grad_des <- T
     }
     else
         grad_des <- T
     
     if(grad_des)
     {
-        gradCp <- - grad
-        gradCp[pen_idx] <- gradCp[pen_idx] + lambda
-        parms_old <- parms
-        parms <- parms - gradCp * epsl
-        parms[parms < 0] <- 0
-        if(sqrt(sum((parms_old - parms)^2)) < epsl * convtol)
-            break
-        compute_likobj <- T
+        parmsNew <- parms - grad * epsl
+        parmsNew[parmsNew < 0] <- 0
         if(!silent)
         {
             cat("Gradient descent is used\n")
         }
-    }else
-    {
-        parms <- coord_des_obj$parms
-        likobj <- likobj_new
-        compute_likobj <- F
     }
+    
     if(!silent)
         cat("\n")
+    
+    likobjNew <- likfun(parmsNew)
+    objNew <- - likobjNew$loglik + lambda * sum(parmsNew)
+    if(objNew > obj - convtol)
+        break
+    parms <- parmsNew
+    likobj <- likobjNew
   }
-  likobj <- likfun(parms)
   return(list(covparms = parms))
 }
 
@@ -128,6 +113,34 @@ coord_quad_posi_domain <- function(A, b, start_parms, silent, convtol, max_iter,
             return(list(code = 0, parms = parms_new))
     }
     return(list(code = 1, parms = parms_new))
+}
+
+#' Find step size using Armijo rule:
+#'   the initial step size is assumed one
+#'   half the step size each iteration until Armijo rule is satisfied
+#' @param parms0 initial parameters
+#' @param v0 objective function value at parms0
+#' @param d0 gradient of the objective function at parms0
+#' @param d a descent direction (norm 1 not required)
+#' @param c the Armijo rule parameter
+#' @param obj_func the objective function that returns a value
+#' 
+#' @return alpha alpha * d would be the step to take, 
+#'   if no proper step size can be found, return -1
+step_size_Armijo <- function(parms0, v0, d0, d, c, obj_func)
+{
+    alpha <- 1
+    step <- alpha * d
+    val <- obj_func(parms0 + step)
+    while(val > v0 + c * sum(d0 * step))
+    {
+        alpha <- 0.5 * alpha
+        step <- alpha * d
+        if(max(abs(step)) < 1e-5)
+            return(-1)
+        val <- obj_func(parms0 + step)
+    }
+    return(alpha)
 }
 
 test_coord_quad_posi_domain <- function()

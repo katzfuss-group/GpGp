@@ -4,14 +4,8 @@
 \alias{vecchia_grouped_profbeta_loglik_grad_info}
 \title{Grouped Vecchia loglikelihood, gradient, Fisher information}
 \usage{
-vecchia_grouped_profbeta_loglik_grad_info(
-  covparms,
-  covfun_name,
-  y,
-  X,
-  locs,
-  NNlist
-)
+vecchia_grouped_profbeta_loglik_grad_info(covparms, covfun_name, y, X,
+  locs, NNlist)
 }
 \arguments{
 \item{covparms}{A vector of covariance parameters appropriate

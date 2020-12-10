@@ -714,6 +714,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// matern25_scaledim_relevance
+arma::mat matern25_scaledim_relevance(arma::vec covparms, arma::mat locs);
+RcppExport SEXP _GpGp_matern25_scaledim_relevance(SEXP covparmsSEXP, SEXP locsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type covparms(covparmsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type locs(locsSEXP);
+    rcpp_result_gen = Rcpp::wrap(matern25_scaledim_relevance(covparms, locs));
+    return rcpp_result_gen;
+END_RCPP
+}
+// d_matern25_scaledim_relevance
+arma::cube d_matern25_scaledim_relevance(arma::vec covparms, arma::mat locs);
+RcppExport SEXP _GpGp_d_matern25_scaledim_relevance(SEXP covparmsSEXP, SEXP locsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type covparms(covparmsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type locs(locsSEXP);
+    rcpp_result_gen = Rcpp::wrap(d_matern25_scaledim_relevance(covparms, locs));
+    return rcpp_result_gen;
+END_RCPP
+}
 // Linv_mult
 NumericVector Linv_mult(NumericMatrix Linv, NumericVector z, IntegerMatrix NNarray);
 RcppExport SEXP _GpGp_Linv_mult(SEXP LinvSEXP, SEXP zSEXP, SEXP NNarraySEXP) {
@@ -936,6 +960,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_GpGp_d_matern45_isotropic", (DL_FUNC) &_GpGp_d_matern45_isotropic, 2},
     {"_GpGp_matern45_scaledim", (DL_FUNC) &_GpGp_matern45_scaledim, 2},
     {"_GpGp_d_matern45_scaledim", (DL_FUNC) &_GpGp_d_matern45_scaledim, 2},
+    {"_GpGp_matern25_scaledim_relevance", (DL_FUNC) &_GpGp_matern25_scaledim_relevance, 2},
+    {"_GpGp_d_matern25_scaledim_relevance", (DL_FUNC) &_GpGp_d_matern25_scaledim_relevance, 2},
     {"_GpGp_Linv_mult", (DL_FUNC) &_GpGp_Linv_mult, 3},
     {"_GpGp_L_mult", (DL_FUNC) &_GpGp_L_mult, 3},
     {"_GpGp_Linv_t_mult", (DL_FUNC) &_GpGp_Linv_t_mult, 3},

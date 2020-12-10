@@ -879,6 +879,34 @@ d_matern45_scaledim <- function(covparms, locs) {
     .Call('_GpGp_d_matern45_scaledim', PACKAGE = 'GpGp', covparms, locs)
 }
 
+#' Matern covariance function, smoothess = 2.5, different relevance parameter for each dimension
+#'
+#' From a matrix of locations and covariance parameters of the form
+#' (variance, relevance_1, ..., relevance_d, nugget), return the square matrix of
+#' all pairwise covariances.
+#' @param locs A matrix with \code{n} rows and \code{d} columns.
+#' Each row of locs is a point in R^d.
+#' @param covparms A vector with covariance parameters
+#' in the form (variance, relevance_1, ..., relevance_d, nugget)
+#' @return A matrix with \code{n} rows and \code{n} columns, with the i,j entry
+#' containing the covariance between observations at \code{locs[i,]} and
+#' \code{locs[j,]}.
+#' @section Parameterization:
+#' The covariance parameter vector is (variance, relevance_1, ..., relevance_d, nugget).
+#' The covariance function is parameterized as
+#' \deqn{ M(x,y) = \sigma^2 (1 + || D(x - y) || + || D(x - y) ||^2/3.0) exp( - || D(x - y) || ) }
+#' where D is a diagonal matrix with (relevance_1, ..., relevance_d) on the diagonals.
+#' The nugget value \eqn{ \sigma^2 \tau^2 } is added to the diagonal of the covariance matrix.
+#' NOTE: the nugget is \eqn{ \sigma^2 \tau^2 }, not \eqn{ \tau^2 }. 
+matern25_scaledim_relevance <- function(covparms, locs) {
+    .Call('_GpGp_matern25_scaledim_relevance', PACKAGE = 'GpGp', covparms, locs)
+}
+
+#' @describeIn matern25_scaledim Derivatives with respect to parameters
+d_matern25_scaledim_relevance <- function(covparms, locs) {
+    .Call('_GpGp_d_matern25_scaledim_relevance', PACKAGE = 'GpGp', covparms, locs)
+}
+
 #' Multiply approximate inverse Cholesky by a vector
 #'
 #' Vecchia's approximation implies a sparse approximation to the

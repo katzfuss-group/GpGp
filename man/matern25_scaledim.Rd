@@ -3,11 +3,14 @@
 \name{matern25_scaledim}
 \alias{matern25_scaledim}
 \alias{d_matern25_scaledim}
+\alias{d_matern25_scaledim_relevance}
 \title{Matern covariance function, smoothess = 2.5, different range parameter for each dimension}
 \usage{
 matern25_scaledim(covparms, locs)
 
 d_matern25_scaledim(covparms, locs)
+
+d_matern25_scaledim_relevance(covparms, locs)
 }
 \arguments{
 \item{covparms}{A vector with covariance parameters
@@ -29,6 +32,8 @@ all pairwise covariances.
 \section{Functions}{
 \itemize{
 \item \code{d_matern25_scaledim}: Derivatives with respect to parameters
+
+\item \code{d_matern25_scaledim_relevance}: Derivatives with respect to parameters
 }}
 
 \section{Parameterization}{

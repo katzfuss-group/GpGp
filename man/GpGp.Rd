@@ -3,6 +3,7 @@
 \docType{package}
 \name{GpGp}
 \alias{GpGp}
+\alias{GpGp-package}
 \title{GpGp: Fast Gaussian Process Computing.}
 \description{
 Vecchia's (1988)

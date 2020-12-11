@@ -115,9 +115,9 @@ arma::cube d_matern25_scaledim_relevance(arma::vec covparms, arma::mat locs ){
             dcovmat(i1,i2,0) += cov/covparms(0);
             // relevance parameters
             for(int j=0; j<dim; j++){
-                double dj2 = pow( locs_scaled(i1,j) - locs_scaled(i2,j), 2.0 );
+                double dj2 = pow( locs(i1,j) - locs(i2,j), 2.0 );
                 dcovmat(i1,i2,j+1) -= 
-                    covparms(0)*exp(-d)*dj2/covparms(j+1)/3.0*( 1 + d );
+                    covparms(0)*exp(-d)*dj2*covparms(j+1)/3.0*( 1 + d );
             }
         }
         if( i1 == i2 ){ // update diagonal entry
@@ -131,7 +131,6 @@ arma::cube d_matern25_scaledim_relevance(arma::vec covparms, arma::mat locs ){
     }}
     return dcovmat;
 }
-
 
 
 

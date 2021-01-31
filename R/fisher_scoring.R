@@ -187,7 +187,8 @@ fisher_scoring <- function( likfun, start_parms, link,
         no_decrease = no_decrease,
         grad = likobj$grad,
         info = likobj$info,
-        conv = ( abs(stepgrad) < convtol || no_decrease )
+        conv = ( abs(stepgrad) < convtol || no_decrease ),
+	neval = j + 1
     )
     return(ret)
 }

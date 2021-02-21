@@ -907,6 +907,38 @@ d_matern25_scaledim_relevance <- function(covparms, locs) {
     .Call('_GpGp_d_matern25_scaledim_relevance', PACKAGE = 'GpGp', covparms, locs)
 }
 
+#' Matern covariance function, smoothess = 2.5, different squared relevance parameter for 
+#' each dimension
+#'
+#' From a matrix of locations and covariance parameters of the form
+#' (variance, squared_relevance_1, ..., squared_relevance_d, nugget), return the square matrix of
+#' all pairwise covariances.
+#' @param locs A matrix with \code{n} rows and \code{d} columns.
+#' Each row of locs is a point in R^d.
+#' @param covparms A vector with covariance parameters
+#' in the form (variance, squared_relevance_1, ..., squared_relevance_d, nugget)
+#' @return A matrix with \code{n} rows and \code{n} columns, with the i,j entry
+#' containing the covariance between observations at \code{locs[i,]} and
+#' \code{locs[j,]}.
+#' @section Parameterization:
+#' The covariance parameter vector is (variance, squared_relevance_1, ..., squared_relevance_d, 
+#' nugget).
+#' The covariance function is parameterized as
+#' \deqn{ M(x,y) = \sigma^2 (1 + || sqrt(D)(x - y) || + || sqrt(D)(x - y) ||^2/3.0) 
+#' exp( - || sqrt(D)(x - y) || ) }
+#' where D is a diagonal matrix with (squared_relevance_1, ..., rsquared_elevance_d) on 
+#' the diagonals.
+#' The nugget value \eqn{ \sigma^2 \tau^2 } is added to the diagonal of the covariance matrix.
+#' NOTE: the nugget is \eqn{ \sigma^2 \tau^2 }, not \eqn{ \tau^2 }. 
+matern25_scaledim_sqrelevance <- function(covparms, locs) {
+    .Call('_GpGp_matern25_scaledim_sqrelevance', PACKAGE = 'GpGp', covparms, locs)
+}
+
+#' @describeIn matern25_scaledim_sqrelevance Derivatives with respect to parameters
+d_matern25_scaledim_sqrelevance <- function(covparms, locs) {
+    .Call('_GpGp_d_matern25_scaledim_sqrelevance', PACKAGE = 'GpGp', covparms, locs)
+}
+
 #' Multiply approximate inverse Cholesky by a vector
 #'
 #' Vecchia's approximation implies a sparse approximation to the

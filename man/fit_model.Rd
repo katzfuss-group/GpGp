@@ -4,10 +4,22 @@
 \alias{fit_model}
 \title{Estimate mean and covariance parameters}
 \usage{
-fit_model(y, locs, X = NULL, covfun_name = "matern_isotropic",
-  NNarray = NULL, start_parms = NULL, reorder = TRUE, group = TRUE,
-  m_seq = c(10, 30), max_iter = 40, fixed_parms = NULL,
-  silent = FALSE, st_scale = NULL, convtol = 1e-04)
+fit_model(
+  y,
+  locs,
+  X = NULL,
+  covfun_name = "matern_isotropic",
+  NNarray = NULL,
+  start_parms = NULL,
+  reorder = TRUE,
+  group = TRUE,
+  m_seq = c(10, 30),
+  max_iter = 40,
+  fixed_parms = NULL,
+  silent = FALSE,
+  st_scale = NULL,
+  convtol = 1e-04
+)
 }
 \arguments{
 \item{y}{response vector}

@@ -35,7 +35,7 @@ void compute_pieces(
 ){
 
     // data dimensions
-    int n = y.n_elem;
+    int n = NNarray.n_rows; // y.n_elem;
     int m = NNarray.n_cols;
     int p = X.n_cols;
     int nparms = covparms.n_elem;
@@ -68,7 +68,7 @@ void compute_pieces(
     
         arma::vec l_covparms(nparms);
 	    for(int j=0; j<nparms; j++){ l_covparms(j) = covparms(j); }
-        int bsize = std::min(i+1,m);
+        int bsize = std::min((int) NNarray(i, 0), m);
 
         // first, fill in ysub, locsub, and X0 in reverse order
         arma::mat locsub(bsize, dim);
@@ -135,16 +135,21 @@ void compute_pieces(
                 // compute last column of Li * (dS_j) * Lit
                 arma::vec LidSLi3 = solve( trimatl(cholmat), dcovmat.slice(j) * choli2 );
                 // store LiX0.t() * LidSLi3 and Liy0.t() * LidSLi3
-                arma::vec v1 = LiX0.t() * LidSLi3;
+		arma::vec v1;
+		if(profbeta)
+                    v1 = LiX0.t() * LidSLi3;
                 double s1 = as_scalar( Liy0.t() * LidSLi3 ); 
                 // update all quantities
                 // bottom-right corner gets double counted, so need to subtract it off
-                (l_dXSX).slice(j) += v1 * LiX0.rows(i2) + ( v1 * LiX0.rows(i2) ).t() - 
-                    as_scalar(LidSLi3(i2)) * ( LiX0.rows(i2).t() * LiX0.rows(i2) );
+		if(profbeta)
+		{
+                    (l_dXSX).slice(j) += v1 * LiX0.rows(i2) + ( v1 * LiX0.rows(i2) ).t() - 
+                        as_scalar(LidSLi3(i2)) * ( LiX0.rows(i2).t() * LiX0.rows(i2) );
+                    (l_dySX).col(j) += (  s1 * LiX0.rows(i2) + ( v1 * Liy0(i2) ).t() -  
+                        as_scalar( LidSLi3(i2) ) * LiX0.rows(i2) * as_scalar( Liy0(i2))).t();
+		}
                 (l_dySy)(j) += as_scalar( 2.0 * s1 * Liy0(i2)  - 
                     LidSLi3(i2) * Liy0(i2) * Liy0(i2) );
-                (l_dySX).col(j) += (  s1 * LiX0.rows(i2) + ( v1 * Liy0(i2) ).t() -  
-                    as_scalar( LidSLi3(i2) ) * LiX0.rows(i2) * as_scalar( Liy0(i2))).t();
                 (l_dlogdet)(j) += as_scalar( LidSLi3(i2) );
                 // store last column of Li * (dS_j) * Lit
                 LidSLi2.col(j) = LidSLi3;
@@ -163,9 +168,12 @@ void compute_pieces(
             for(int j=0; j<nparms; j++){
                 arma::mat LidSLi = solve( trimatl(cholmat), dcovmat.slice(j) );
                 LidSLi = solve( trimatl(cholmat), LidSLi.t() );
-                (l_dXSX).slice(j) += LiX0.t() *  LidSLi * LiX0; 
+		if(profbeta)
+		{
+                    (l_dXSX).slice(j) += LiX0.t() *  LidSLi * LiX0; 
+                    (l_dySX).col(j) += ( ( Liy0.t() * LidSLi ) * LiX0 ).t();
+		}
                 (l_dySy)(j) += as_scalar( Liy0.t() * LidSLi * Liy0 );
-                (l_dySX).col(j) += ( ( Liy0.t() * LidSLi ) * LiX0 ).t();
                 (l_dlogdet)(j) += trace( LidSLi );
                 LidSLi2.col(j) = LidSLi;
             }
@@ -439,7 +447,7 @@ void synthesize(
     bool grad_info ){
 
     // data dimensions
-    int n = y.length();
+    int n = NNarray.nrow(); // y.length();
     //int m = NNarray.ncol();
     int p = X.ncol();
     int nparms = covparms.length();

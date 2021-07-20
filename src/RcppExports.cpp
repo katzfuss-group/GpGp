@@ -845,6 +845,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// vecchia_meanzero_loglik_grad_info
+List vecchia_meanzero_loglik_grad_info(NumericVector covparms, StringVector covfun_name, NumericVector y, const NumericMatrix locs, NumericMatrix NNarray);
+RcppExport SEXP _GpGp_vecchia_meanzero_loglik_grad_info(SEXP covparmsSEXP, SEXP covfun_nameSEXP, SEXP ySEXP, SEXP locsSEXP, SEXP NNarraySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type covparms(covparmsSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type covfun_name(covfun_nameSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix >::type locs(locsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type NNarray(NNarraySEXP);
+    rcpp_result_gen = Rcpp::wrap(vecchia_meanzero_loglik_grad_info(covparms, covfun_name, y, locs, NNarray));
+    return rcpp_result_gen;
+END_RCPP
+}
 // vecchia_profbeta_loglik
 List vecchia_profbeta_loglik(NumericVector covparms, StringVector covfun_name, NumericVector y, NumericMatrix X, const NumericMatrix locs, NumericMatrix NNarray);
 RcppExport SEXP _GpGp_vecchia_profbeta_loglik(SEXP covparmsSEXP, SEXP covfun_nameSEXP, SEXP ySEXP, SEXP XSEXP, SEXP locsSEXP, SEXP NNarraySEXP) {
@@ -994,6 +1009,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_GpGp_L_t_mult", (DL_FUNC) &_GpGp_L_t_mult, 3},
     {"_GpGp_vecchia_Linv", (DL_FUNC) &_GpGp_vecchia_Linv, 5},
     {"_GpGp_vecchia_profbeta_loglik_grad_info", (DL_FUNC) &_GpGp_vecchia_profbeta_loglik_grad_info, 6},
+    {"_GpGp_vecchia_meanzero_loglik_grad_info", (DL_FUNC) &_GpGp_vecchia_meanzero_loglik_grad_info, 5},
     {"_GpGp_vecchia_profbeta_loglik", (DL_FUNC) &_GpGp_vecchia_profbeta_loglik, 6},
     {"_GpGp_vecchia_meanzero_loglik", (DL_FUNC) &_GpGp_vecchia_meanzero_loglik, 5},
     {"_GpGp_vecchia_grouped_profbeta_loglik_grad_info", (DL_FUNC) &_GpGp_vecchia_grouped_profbeta_loglik_grad_info, 6},

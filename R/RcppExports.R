@@ -1104,6 +1104,39 @@ vecchia_profbeta_loglik_grad_info <- function(covparms, covfun_name, y, X, locs,
     .Call('_GpGp_vecchia_profbeta_loglik_grad_info', PACKAGE = 'GpGp', covparms, covfun_name, y, X, locs, NNarray)
 }
 
+#' Vecchia's loglikelihood, gradient, and Fisher information assuming zero mean
+#'
+#' This function returns Vecchia's (1988) approximation to the Gaussian
+#' loglikelihood, profiling out the regression coefficients, and returning
+#' the gradient and Fisher information. 
+#' Vecchia's approximation modifies the ordered conditional
+#' specification of the joint density; rather than each term in the product
+#' conditioning on all previous observations, each term conditions on
+#' a small subset of previous observations.
+#' @inheritParams vecchia_meanzero_loglik
+#' @return A list containing 
+#' \itemize{
+#'     \item \code{loglik}: the loglikelihood
+#'     \item \code{grad}: gradient with respect to covariance parameters
+#'     \item \code{info}: Fisher information for covariance parameters
+#' }
+#' The covariance matrix for \code{$betahat} is the inverse of \code{$betainfo}.
+#' @examples
+#' n1 <- 20
+#' n2 <- 20
+#' n <- n1*n2
+#' locs <- as.matrix( expand.grid( (1:n1)/n1, (1:n2)/n2 ) )
+#' covparms <- c(2, 0.2, 0.75, 0)
+#' y <- fast_Gp_sim(covparms, "matern_isotropic", locs, 50 )
+#' ord <- order_maxmin(locs)
+#' NNarray <- find_ordered_nn(locs,20)
+#' #loglik <- vecchia_meanzero_loglik_grad_info( covparms, "matern_isotropic", 
+#' #    y, locs, NNarray )
+#' @export
+vecchia_meanzero_loglik_grad_info <- function(covparms, covfun_name, y, locs, NNarray) {
+    .Call('_GpGp_vecchia_meanzero_loglik_grad_info', PACKAGE = 'GpGp', covparms, covfun_name, y, locs, NNarray)
+}
+
 #' Vecchia's approximation to the Gaussian loglikelihood, with profiled 
 #' regression coefficients.
 #'
